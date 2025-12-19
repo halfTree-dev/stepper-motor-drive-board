@@ -1,32 +1,41 @@
-# _Sample project_
+# 驱动板串口命令列表
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+以下是步进电机驱动板支持的串口命令列表。用户可以通过串口发送相应的命令来控制电机的行为和配置参数。
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+## 参数配置
+- `SET_CONFIG <参数名> <值>`: 设置电机的配置参数。支持的参数包括：
+  - `ENABLE`: 启用或禁用电机驱动（值为0或1）。
+  - `MICRO_STEP_MODE`: 设置微步模式（值为0-5，对应不同的微步细分）。
+  - `DECAY_MODE`: 设置衰减模式（值为0或1）。
+  - `SLEEP_MODE`: 设置睡眠模式（值为0或1）。
+  - `RESET_MODE`: 设置复位模式（值为0或1）。
 
+- `RESET`: 传递一个短低电平脉冲以重置 DRV8825 驱动芯片。
 
+## 电机控制
+电机控制采用队列制，即可以连续发送多个动作，电机会依次执行队列中的动作。
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+### 可用队列动作
+执行这些动作将会将动作添加到队列中，等待`ACTIVATE`命令触发执行。
+- `MOVE <方向> <角度> <角速度>`:
+    - 控制电机移动指定的角度和角速度。
+    - `<方向>`: `CW`（顺时针）或 `CCW`（逆时针）。
+    - `<角度>`: 移动的角度，单位为度。
+    - `<角速度>`: 移动的角速度，单位为度/秒。
 
-## Example folder contents
+- `MOVE <方向> FOREVER <角速度>`:
+    - 控制电机持续旋转，直到收到停止命令。
+    - `<方向>`: `CW`（顺时针）或 `CCW`（逆时针）。
+    - `<角速度>`: 旋转的角速度，单位为度/秒。
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+### 执行动作
+- `ACTIVATE`:
+    - 激活当前的动作队列，开始执行队列中的动作。
+- `CLEAR`:
+    - 清空当前的动作队列，取消所有未执行的动作。
+- `STOP`:
+    - 立即停止当前正在执行的动作，重新等待指令。
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
-
-Below is short explanation of remaining files in the project folder.
-
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+## 其他命令
+- `BUZZER`:
+    手动打开蜂鸣器，听个响。
